@@ -293,42 +293,65 @@ public class Analytics {
 	 * a comma separates two components, except the last two, where "and" is the separator.
 	 * 
 	 * see JUnit tests for more clarity
-	 * records[0] = "551102,14/2/18 10:52,14/2/18 11:00,2,1,1"
-	 * records[1] = "595789,14/2/18 12:27,14/2/18 14:08,1,-,1"
-	 * records[2] = "463521,14/2/18 13:26,17/2/18 16:32,1,-,0"
- 	 * records[3] = "610197,14/2/18 17:04,14/2/18 17:31,0,0,0"
 	 * 
 	 */
 	public String timeToDisplayByIndex(int idx) {
 		String[] tokens = records[idx].split(",");
-		/* arr[0] = Day
-		 * arr[1] = Month
-		 * arr[2] = Year
-		 * arr[3] = Hour
-		 * arr[4] = Minute
-		 */
+
 		String[] start = tokens[1].split("/|:| ");
 		String[] end = tokens[2].split("/|:| ");
-		int minutes = Integer.parseInt(end[4]) - Integer.parseInt(start[4]);
-		int hours = Integer.parseInt(end[3]) - Integer.parseInt(start[3]);
-		int days = Integer.parseInt(end[0]) - Integer.parseInt(start[0]);
-		int months = Integer.parseInt(end[1]) - Integer.parseInt(start[1]);
-		int years = Integer.parseInt(end[2]) - Integer.parseInt(start[2]);
 		
-		if(start[2].equals(end[2])) { //same year
-			if(start[1].equals(end[1])) { //same month
-				if(start[0].equals(end[0])) { //same day
-					if(start[3].equals(end[3])) { //same hour
-						if(start[4].equals(end[4])) { //same minute
-							return "0 minutes";
-						}
-						return minutes + " minutes";
-					}
-					return hours + " hours";
-				}
-			}
+		int minute = Integer.parseInt(end[4]) - Integer.parseInt(start[4]);
+		int hour = Integer.parseInt(end[3]) - Integer.parseInt(start[3]);
+		int day = Integer.parseInt(end[0]) - Integer.parseInt(start[0]);
+		int month = Integer.parseInt(end[1]) - Integer.parseInt(start[1]);
+		int year = Integer.parseInt(end[2]) - Integer.parseInt(start[2]);
+		
+		if(minute < 0) {
+			hour --;
+		}
+		if(hour < 0) {
+			day --;
+		}
+		if(day < 0) {
+			month --;
+		}
+		if(month < 0) {
+			year --;
 		}
 		
-		return ""; //to be completed
+		String minutes = createString(start[4], end[4], "minute");
+		String hours = createString(start[3], end[3], "hour");
+		String days = createString(start[0], end[0], "day");
+		String months = createString(start[1], end[1], "month");
+		String years = createString(start[2], end[2], "year");
+		
+		return years + months + days + hours + minutes; //to be completed
+	}
+	/*
+	 * HELPER METHOD
+	 * Purpose: check to see if there are multiple minutes/hours etc.
+	 * @return string containing "minute" or "minutes"
+	 */
+	public String isMultiple(int x) {
+		if(x == 1) {
+			return "";
+		}
+		return "s";
+	}
+	
+	/*
+	 * HELPER METHOD
+	 * @return the string for a given unit of time
+	 */
+	public String createString(String start, String end, String unit) {
+		int time = Integer.parseInt(end) - Integer.parseInt(start);
+		if(time == 0) {
+			return "";
+		}
+		if(!unit.equals("minute")) {
+			return (time + " " + unit + isMultiple(time));
+		}
+		return (time + " " + unit + isMultiple(time)) + ", ";
 	}
 }
