@@ -3,16 +3,26 @@ package assignment1;
 import java.io.FileNotFoundException;
 
 public class Analytics {
+	/**
+	 * An array of strings for the students results combined
+	 * to split it into usable data use:
+	 * for an item in the array at index i,
+	 * String[] tokens = records[i].split(",");
+	 * - tokens[0] = Student ID (numerical value stored as String)
+	 * - tokens[1] = Start Date and Time (format DD/MM/YYYY HH:MM)
+	 * - tokens[2] = End Date and Time (format DD/MM/YYYY HH:MM)
+	 * - tokens[3] = Total Grade (numerical value stored as String)
+	 * @note marks for each question are stored as Strings in tokens[4], tokens[5], ....
+	 * - marks in first question (numerical value stored as String, but could be "-" implying non-attempt): tokens[4]
+	 * - marks in second question (numerical value stored as String, but could be "-" implying non-attempt): tokens[5]
+	 * ...
+	 */
 	public String[] records;
 	public int[] weights;
 
 	public Analytics(String filename) throws FileNotFoundException {
 		records = DataReader.readData(filename);
 		weights = DataReader.getWeights(filename);
-		System.out.println(this.averageQuizPercentageMark());
-		for(int i=0; i < records.length; i++) {
-			System.out.println(getTimeTakenAsStringByIndex(i));
-		}
 	}
 
 	/**
@@ -29,20 +39,11 @@ public class Analytics {
 	 */
 	public int quizTotal() {
 		int total = 0;
-		for(int i = 0; i < weights.length; i++) {
-			total += weights[i];
+		for(int item : weights) {
+			total += item;
 		}
 		return total;
 	}
-
-		public int[] getAttempt(int idx) {
-			String[] tokens = records[idx].split(",");
-			int[] result = new int[weights.length];
-			for(int i=4; i < tokens.length; i++) {
-				result[i-4] = Integer.parseInt(tokens[i]);
-			}
-			return result;
-		}
 
 	/**
 	 * 10 marks
@@ -52,11 +53,26 @@ public class Analytics {
 	 * for example, any value OUTSIDE 1 to 31 is invalid if there are 31 questions.
 	 */
 	public int getQuestionWeight(int questionNumber) {
-		if(questionNumber <= 0 || questionNumber >= countQuestions())	{
+		if(questionNumber <= 0 || questionNumber > countQuestions()) {
 			return 0;
 		}
-		System.out.println("             " + weights[1]);
 		return weights[questionNumber-1];
+	}
+	
+	/**
+	 * DO NOT MODIFY
+	 * PROVIDED AS A SAMPLE
+	 * @return number of students who get a zero
+	 */
+	public int countZeroes() {
+		int count = 0;
+		for(int i=0; i < records.length; i++) {
+			String[] tokens = records[i].split(",");
+			if(Integer.parseInt(tokens[3]) == 0) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	/**
@@ -66,7 +82,12 @@ public class Analytics {
 	 */
 	public int countPasses(int passMark) {
 		int count = 0;
-
+		for(String record : records) {
+			String[] tokens = record.split(",");
+			if(Integer.parseInt(tokens[3]) >= passMark) {
+				count++;
+			}
+		}
 		return count;
 	}
 
@@ -75,10 +96,13 @@ public class Analytics {
 	 * @return the overall average percentage marks for the quiz. 
 	 * @note the mark for a given attempt is the 4th value in the record
 	 */
-	public double averageQuizPercentageMark() {
-		int total = 0;
-
-		return 0;
+	public double avgQuizPercent() {
+		double count = 0;
+		for(String record: records) {
+			String[] tokens = record.split(",");
+			count += (Integer.parseInt(tokens[3]) / (double)quizTotal());
+		}
+		return count / records.length * 100; //to be completed
 	}
 
 	/**
@@ -87,8 +111,11 @@ public class Analytics {
 	 */
 	public int highestMark() {
 		int highest = 0;
-
-		return highest;
+		for(String record: records) {
+			String[] tokens = record.split(",");
+			highest = Math.max(highest, Integer.parseInt(tokens[3]));
+		}
+		return highest; //to be completed
 	}
 
 	/**
@@ -97,10 +124,16 @@ public class Analytics {
 	 * @return the best mark for the student with given id 
 	 * (return 0 if an attempt for that id doesn't exist)
 	 */
-	public  int bestMarkByStudent(int id) {
+	public int bestMarkByStudent(int id) {
 		int best = 0;
-
-		return best;
+		for(String record: records) {
+			String[] tokens = record.split(",");
+			String ID = String.valueOf(id);
+			if(ID.equals(tokens[0])) {
+				best = Math.max(best, Integer.parseInt(tokens[3]));
+			}
+		}
+		return best; //to be completed
 	}
 
 	/**
@@ -109,8 +142,21 @@ public class Analytics {
 	 * @return the average mark for the student with given id 
 	 * (return 0 if an attempt for that id doesn't exist)
 	 */
-	public double averageMarkByStudent(int id) {
-		return 0;
+	public double avgMarkByStudentId(int id) {
+		double average = 0;
+		int count = 0;
+		for(String record: records) {
+			String[] tokens = record.split(",");
+			String ID = String.valueOf(id);
+			if(ID.equals(tokens[0])) {
+				average += Integer.parseInt(tokens[3]);
+				count++;
+			}
+		}
+		if(count == 0) {
+			return 0;
+		}
+		return average / (double)count; //to be completed
 	}
 
 	/**
@@ -118,9 +164,34 @@ public class Analytics {
 	 * @param questionNumber
 	 * @return the average percentage mark for the given question number.
 	 * if questionNumber = 1, return the average percentage mark for the first question, and so on...
+	 * 
+	 * NOTE: some students might not attempt a particular question, indicated by a dash ("-").
+	 * these values don't contribute towards attempts or average. 
+	 * For example, let the following be the first entries in the array records:
+	 * 
+	 * records[0] = "551102,14/2/18 10:52,14/2/18 11:00,2,1,1"
+	 * records[1] = "595789,14/2/18 12:27,14/2/18 14:08,1,-,1"
+	 * records[2] = "463521,14/2/18 13:26,17/2/18 16:32,1,-,0"
+ 	 * records[3] = "610197,14/2/18 17:04,14/2/18 17:31,0,0,0"
+ 	 * 
+ 	 * If you look at Question 1 (5th comma-separate value), the marks are: "1", "-", "-" and "0".
+ 	 * Thus the average should be, mathematically, (1+0)/2, which should be returned as (maintaining precision) 0.5
 	 */
-	public double averagePercentageMarkByQuestion(int questionNumber) {
-		return 0;
+	public double avgPercentByQuestion(int questionNumber) {
+		if(getQuestionWeight(questionNumber) == 0) {
+			return 0;
+		}
+		int numStudents = 0;
+		int marks = 0;
+		
+		for(String record:records) {
+			String[] tokens = record.split(",");
+			if(!tokens[questionNumber+3].equals("-")) {
+				numStudents ++;
+				marks += Integer.parseInt(tokens[questionNumber+3]);
+			}
+		}	
+		return marks / (double)getQuestionWeight(questionNumber) * 100 / numStudents;
 	}
 
 	/**
@@ -129,20 +200,16 @@ public class Analytics {
 	 * return 1 if the first question was the hardest, 2 if the second was and so on...
 	 */
 	public int hardestQuestion() {
-		int toughest = 1;
-
-		return toughest;
-	}
-
-	/**
-	 * HELPER
-	 * @param data
-	 * @param item
-	 * @return
-	 */
-	private static boolean contains(int[] data, int item) {
-
-		return false;
+		int num = 1;
+		double curLowest = avgPercentByQuestion(1);
+		for(int i = 1; i < weights.length; i++) {
+			double thisLow = avgPercentByQuestion(i+1);
+			if(thisLow < curLowest) {
+				num = i+1;
+				curLowest = thisLow;
+			}
+		}
+		return num; //to be completed
 	}
 
 	/**
@@ -151,9 +218,36 @@ public class Analytics {
 	 * @return an array containing marks of all attempts for student with given id
 	 * return an empty array if an attempt for student with given id doesn't exist.
 	 */
-	public int[] getAllAttemptsForStudent(int id) {
-
-		return null;
+	public int[] getStudentAttempts(int id) {
+		int attempts = numAttempts(id); 
+		if(attempts == 0) {
+			return new int[0];
+		}
+		int[] scores = new int[attempts];
+		int idx = 0;
+		for(String record: records) {
+			String[] tokens = record.split(",");
+			if(tokens[0].equals(String.valueOf(id))) {
+				scores[idx] = Integer.parseInt(tokens[3]);
+				idx++;
+			}
+		}
+		return scores;
+	}
+	
+	/* HELPER FUNCTION
+	 * @param id
+	 * @return number of attempts made by a student
+	 */
+	public int numAttempts(int id) {
+		int attempts = 0;
+		for(String record: records) {
+			String[] tokens = record.split(",");
+			if(tokens[0].contentEquals(String.valueOf(id))) {
+				attempts++;
+			}
+		}
+		return attempts;
 	}
 
 	/**
@@ -162,29 +256,79 @@ public class Analytics {
 	 * @return an array containing question numbers from the hardest to easiest (based on average marks in the questions)
 	 */
 	public int[] getHardestToEasiest() {
-		return null;
+		int[] questions = new int[countQuestions()];
+		for(int i = 0; i < countQuestions(); i++) {
+			questions[i] = i+1;
+		}
+		insertionSort(questions);
+		return questions; //to be completed
 	}
+	
+	/**
+	 * HELPER METHOD
+	 * Insertion Sort
+	 */
+	void insertionSort(int arr[]) { 
+        for (int i = 1; i < arr.length; i++) { 
+            int val = arr[i]; 
+            int j = i - 1; 
+ 
+            while (j >= 0 && avgPercentByQuestion(arr[j]) > avgPercentByQuestion(val)) { 
+                arr[j + 1] = arr[j]; 
+                j = j - 1; 
+            } 
+            arr[j + 1] = val; 
+        } 
+    } 
 
 	/**
 	 * 5 marks
-	 * @param time (in minutes)
+	 * @param idx index in array records for which the time must be returned
+	 * @return time in the formats specified in the JUnit tests
 	 * 
-	 * return time in the formats specified in the JUnit tests
-	 */
-	public String getTimeTakenAsStringByIndex(int idx) {
-		return "Hgjhg";		
-	}
-
-	/**
-	 * HELPER
+	 * there are three components in time (for our purpose) - days, hours and minutes.
+	 * only those components must be included that have a non-zero value
+	 * (the only exception being when the quiz starts and finishes during the same minute,
+	 * in which case it should return "0 minutes").
+	 * a comma separates two components, except the last two, where "and" is the separator.
 	 * 
-	 * @param date
-	 * @param time
-	 * @return number of seconds since 00:00, 01/01/2020
+	 * see JUnit tests for more clarity
+	 * records[0] = "551102,14/2/18 10:52,14/2/18 11:00,2,1,1"
+	 * records[1] = "595789,14/2/18 12:27,14/2/18 14:08,1,-,1"
+	 * records[2] = "463521,14/2/18 13:26,17/2/18 16:32,1,-,0"
+ 	 * records[3] = "610197,14/2/18 17:04,14/2/18 17:31,0,0,0"
+	 * 
 	 */
-	private static int epoch(String[] date, String[] time) {
-		int total = 0;
-
-		return total;
+	public String timeToDisplayByIndex(int idx) {
+		String[] tokens = records[idx].split(",");
+		/* arr[0] = Day
+		 * arr[1] = Month
+		 * arr[2] = Year
+		 * arr[3] = Hour
+		 * arr[4] = Minute
+		 */
+		String[] start = tokens[1].split("/|:| ");
+		String[] end = tokens[2].split("/|:| ");
+		int minutes = Integer.parseInt(end[4]) - Integer.parseInt(start[4]);
+		int hours = Integer.parseInt(end[3]) - Integer.parseInt(start[3]);
+		int days = Integer.parseInt(end[0]) - Integer.parseInt(start[0]);
+		int months = Integer.parseInt(end[1]) - Integer.parseInt(start[1]);
+		int years = Integer.parseInt(end[2]) - Integer.parseInt(start[2]);
+		
+		if(start[2].equals(end[2])) { //same year
+			if(start[1].equals(end[1])) { //same month
+				if(start[0].equals(end[0])) { //same day
+					if(start[3].equals(end[3])) { //same hour
+						if(start[4].equals(end[4])) { //same minute
+							return "0 minutes";
+						}
+						return minutes + " minutes";
+					}
+					return hours + " hours";
+				}
+			}
+		}
+		
+		return ""; //to be completed
 	}
 }
