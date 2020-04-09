@@ -309,49 +309,107 @@ public class Analytics {
 		
 		if(minute < 0) {
 			hour --;
+			minute += 60;
 		}
 		if(hour < 0) {
 			day --;
+			hour += 24;
 		}
 		if(day < 0) {
 			month --;
+			//Condition to check which month
+			day += getDays(month, year);
 		}
 		if(month < 0) {
 			year --;
+			month += 12;
+		}
+
+		String[] arr = new String[5];
+		arr[4] = createString(minute, "minute");
+		arr[3] = createString(hour, "hour");
+		arr[2] = createString(day, "day");
+		arr[1] = createString(month, "month");
+		arr[0] = createString(year, "year");
+		
+		//If no time as elapsed
+		if(allEmpty(arr)) {
+			return "0 minutes";
 		}
 		
-		String minutes = createString(start[4], end[4], "minute");
-		String hours = createString(start[3], end[3], "hour");
-		String days = createString(start[0], end[0], "day");
-		String months = createString(start[1], end[1], "month");
-		String years = createString(start[2], end[2], "year");
+		String finalStr = "";
+		boolean and = false;
+		boolean comma = false;
+		for(int i = 4; i >= 0; i --) {
+			System.out.println(i);
+			if(!arr[i].equals("")) {
+				if(!and) {
+					finalStr = arr[i];
+					and = !and;
+				}
+				else if(!comma && and) {
+					finalStr = arr[i] + " and " + finalStr;
+					comma = !comma;
+				}
+				else {
+					finalStr = arr[i] + ", " + finalStr;
+				}
+			}
+		}
 		
-		return years + months + days + hours + minutes; //to be completed
+		return finalStr; //to be completed
 	}
+	
 	/*
 	 * HELPER METHOD
-	 * Purpose: check to see if there are multiple minutes/hours etc.
-	 * @return string containing "minute" or "minutes"
+	 * Checks if our array of Strings is empty
+	 * @param array of string items
+	 * @return true if the array is empty, false otherwise.
 	 */
-	public String isMultiple(int x) {
-		if(x == 1) {
-			return "";
+	boolean allEmpty(String[] arr) {
+		for(int i = 0; i < arr.length; i++) {
+			if(!arr[i].equals("")) {
+				return false;
+			}
 		}
-		return "s";
+		return true;
+	}
+	
+	/*
+	 * HELPER METHOD
+	 * @param m is month to find
+	 * @return number of days in the month.
+	 */
+	int getDays(int m, int year) {
+		if (m == 9 || m == 4 || m == 6 || m == 11) {
+			return 30;
+		}
+		else if (m == 1 || m == 3 || m == 5 || m == 7 || m == 8 || m == 10 || m == 12) {
+			return 31;
+		}
+		else {
+			if (year % 4 == 0) {
+				//LEAP YEAR
+				return 29;
+			}
+			else {
+				//NOT LEAP YEAR
+				return 28;
+			}
+		}
 	}
 	
 	/*
 	 * HELPER METHOD
 	 * @return the string for a given unit of time
 	 */
-	public String createString(String start, String end, String unit) {
-		int time = Integer.parseInt(end) - Integer.parseInt(start);
+	public String createString(int time, String unit) {
 		if(time == 0) {
 			return "";
 		}
-		if(!unit.equals("minute")) {
-			return (time + " " + unit + isMultiple(time));
+		if(time != 1) {
+			unit = unit + "s";
 		}
-		return (time + " " + unit + isMultiple(time)) + ", ";
+		return (time + " " + unit);
 	}
 }
