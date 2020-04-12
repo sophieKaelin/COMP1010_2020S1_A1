@@ -301,12 +301,16 @@ public class Analytics {
 		String[] start = tokens[1].split("/|:| ");
 		String[] end = tokens[2].split("/|:| ");
 		
+		// Convert string to int and find elapsed time
 		int minute = Integer.parseInt(end[4]) - Integer.parseInt(start[4]);
 		int hour = Integer.parseInt(end[3]) - Integer.parseInt(start[3]);
 		int day = Integer.parseInt(end[0]) - Integer.parseInt(start[0]);
 		int month = Integer.parseInt(end[1]) - Integer.parseInt(start[1]);
 		int year = Integer.parseInt(end[2]) - Integer.parseInt(start[2]);
 		
+		String[] arr = new String[5];
+		
+		// If the unit of time is negative, decrease the next unit in time by one, and wrap unit around.
 		if(minute < 0) {
 			hour --;
 			minute += 60;
@@ -317,31 +321,30 @@ public class Analytics {
 		}
 		if(day < 0) {
 			month --;
-			//Condition to check which month
 			day += getDays(month, year);
 		}
 		if(month < 0) {
 			year --;
 			month += 12;
 		}
-
-		String[] arr = new String[5];
-		arr[4] = createString(minute, "minute");
-		arr[3] = createString(hour, "hour");
-		arr[2] = createString(day, "day");
-		arr[1] = createString(month, "month");
-		arr[0] = createString(year, "year");
 		
-		//If no time as elapsed
+		//Assign strings of values to an array.
+		arr[0] = createString(minute, "minute");
+		arr[1] = createString(hour, "hour");
+		arr[2] = createString(day, "day");
+		arr[3] = createString(month, "month");
+		arr[4] = createString(year, "year");
+		
+		//If no time has elapsed
 		if(allEmpty(arr)) {
 			return "0 minutes";
 		}
 		
+		//Concatenate all the strings together with combinations of commas and "and"s
 		String finalStr = "";
 		boolean and = false;
 		boolean comma = false;
-		for(int i = 4; i >= 0; i --) {
-			System.out.println(i);
+		for(int i = 0; i < 5; i ++) {
 			if(!arr[i].equals("")) {
 				if(!and) {
 					finalStr = arr[i];
@@ -377,10 +380,13 @@ public class Analytics {
 	
 	/*
 	 * HELPER METHOD
-	 * @param m is month to find
+	 * Determines how many days are in the month
+	 * @param m is month to find, y is year to check if leap year 
 	 * @return number of days in the month.
 	 */
-	int getDays(int m, int year) {
+	int getDays(int m, int y) {
+		//What about negatives and values greater than 13.
+		//TODO : this is not implemented correctly, it is dealing with time and not the current month.
 		if (m == 9 || m == 4 || m == 6 || m == 11) {
 			return 30;
 		}
@@ -388,12 +394,10 @@ public class Analytics {
 			return 31;
 		}
 		else {
-			if (year % 4 == 0) {
-				//LEAP YEAR
+			if (y % 4 == 0) {
 				return 29;
 			}
 			else {
-				//NOT LEAP YEAR
 				return 28;
 			}
 		}
